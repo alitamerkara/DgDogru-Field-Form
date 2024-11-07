@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet,Button } from 'react-native';
 
-const Home = ({navigator}) => {
+const Home = ({navigation}) => {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Welcome to the Home Page</Text>
-            <Button title="Forma Git" onPress={()=>navigator.navigate("Form")}/>
+            <Button title="Forma Git" onPress={()=>navigation.navigate("Form")}/>
         </View>
     );
 };
