@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, Platform, Button, ScrollView } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import DateTimePicker from '@react-native-community/datetimepicker';
-// import { getDate } from 'date-fns';
+import { collection, addDoc } from "firebase/firestore";  
+import { db } from '../../firebaseConfig';
+// import { auth } from '../../firebase';
+
 
 const Form = () => {
     const [firm, setFirm] = useState(null);
@@ -11,11 +14,8 @@ const Form = () => {
     const [edit, setEdit] = useState(false);
     const [mustPay, setMustPay] = useState(0);
     const [payMethod, setPayMethod] = useState(0);
-    const [date, setDate] = useState(() => {
-      const currentDate = new Date();
-      currentDate.setHours(currentDate.getHours() + 3); // Mevcut saate 3 saat ekler
-      return currentDate;
-    });
+    const [form, setForm] = useState({});
+    const [date, setDate] = useState(new Date());
     const [show, setShow] = useState(false);
     const [isFocus, setIsFocus] = useState(false);
     const [paid, setPaid] = useState(0);
@@ -25,11 +25,49 @@ const Form = () => {
         { label: 'Nakit', value: 'Nakit' },
         { label: 'Havale', value: 'Havale' },
       ];
-
       const onChange = (event, selectedDate) => {
         const currentDate = selectedDate || date;
         setShow(Platform.OS === 'ios');
         setDate(currentDate);
+      };
+      const handlePress = async () => {
+        const formattedDate = date.toLocaleString('tr-TR', {
+          hour: '2-digit',
+          minute: '2-digit',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit', 
+        });
+        try {
+          const formData = {
+            tarih: formattedDate,
+            firma: firm,
+            kilo: kilo,
+            birimFiyat: unitPrice,
+            toplam: total,
+            ödenen: paid,
+            kalan: remaining,
+            ödeme: payMethod,
+          };
+      
+          // Firestore koleksiyonuna form verisini ekleyin
+          const docRef = await addDoc(collection(db, 'reports'), formData);
+          console.log('Rapor başarıyla kaydedildi, ID: ', docRef.id);
+      
+          // İşlem tamamlandığında formu sıfırlayın
+          setFirm('');
+          setKilo(0);
+          setUnitPrice(0);
+          setPaid(0);
+          setMustPay(0);
+          setPayMethod('');
+          setDate(new Date());  // Tarih sıfırlanabilir
+      
+          alert('Rapor başarıyla kaydedildi!');
+        } catch (error) {
+          console.error('Veri kaydedilirken hata oluştu: ', error);
+          alert('Bir hata oluştu, lütfen tekrar deneyin.');
+        }
       };
     return (
       <ScrollView style={styles.whole}>
@@ -144,7 +182,7 @@ const Form = () => {
           }}
         />
         </View> */}
-   <Button title="Submit" onPress={() => console.log(date)} />
+   <Button title="Submit" onPress={handlePress} />
       </ScrollView>
     );
 };
